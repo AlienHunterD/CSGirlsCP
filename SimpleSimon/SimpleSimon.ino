@@ -89,8 +89,15 @@ void indicateButton(uint8_t b, uint16_t duration) {
   for (int p=0; p<3; p++) {
     CircuitPlayground.setPixelColor(simonButton[b].pixel[p], simonButton[b].color);
   }
-  
-  CircuitPlayground.playTone(simonButton[b].freq, duration);
+
+  if (CircuitPlayground.slideSwitch())
+  {
+    CircuitPlayground.playTone(simonButton[b].freq, duration);
+  }
+  else
+  {
+    delay(duration);
+  }
   CircuitPlayground.clearPixels();
 }
 
@@ -134,13 +141,25 @@ void gameLost(int b) {
   }
 
   // Play sad sound :(
-  CircuitPlayground.playTone(FAILURE_TONE, 1500);
- 
+  if (CircuitPlayground.slideSwitch())
+  {
+    CircuitPlayground.playTone(FAILURE_TONE, 1500);
+  }
+  else
+  {
+    delay(1500);
+  }
+  
   // And just sit here until reset
   int p = 0, p_old = 0;
   
   while (true) 
   {
+    if (CircuitPlayground.leftButton() || CircuitPlayground.rightButton())
+    {
+      break;
+    }
+    
     CircuitPlayground.clearPixels();
     CircuitPlayground.setPixelColor(p_old, 0x777777);
     CircuitPlayground.setPixelColor(p, 0xFFFFFF);
@@ -148,6 +167,9 @@ void gameLost(int b) {
     p = (p+1)%10;
     delay(150);
   }
+
+  // Create game
+  Reset();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -189,7 +211,11 @@ void gameWon() {
 void setup() {
   // Initialize the Circuit Playground
   CircuitPlayground.begin();
+  Reset();
+}
 
+void Reset()
+{
   // Set play level
   skillLevel = 1;
   CircuitPlayground.clearPixels();
